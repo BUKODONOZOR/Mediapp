@@ -37,3 +37,4 @@ class DoctorService
         return $this->repository->delete($id);
     }
 }
+ 

@@ -1,57 +1,44 @@
-<?php 
+<?php
 
 namespace App\Repositories;
 
-use App\Models\Patient;
-use App\Models\Doctor;
 use App\Models\Appointment;
-use Illuminate\Support\Facades\DB;
-
+use Carbon\Carbon;
 
 class AppointmentRepository
+
+
+
+
 {
-    public function getAll()
-    {
-        return Appointment::all();
-    }
 
-    public function findById($id)
+    public function getAppointmentsByPatient($patientId)
     {
-        return Appointment::find($id);
+        return Appointment::where('patient_id', $patientId)->get();
     }
-
-    public function create(array $data)
+    
+    public function hasTimeConflict(string $date, string $time, int $doctorId): bool
     {
-        return DB::transaction(function () use ($data) {
-            $appointment = Appointment::create($data);
-            return $appointment;
-        });
-    }
+        $appointmentTime = Carbon::createFromFormat('Y-m-d H:i', $date . ' ' . $time);
 
-    public function update($id, array $data)
-    {
-        $appointment = $this->findById($id);
-        return $appointment ? $appointment->update($data) : null;
-    }
-
-    public function delete($id)
-    {
-        $appointment = $this->findById($id);
-        return $appointment ? $appointment->delete() : false;
-    }
-
-    public function findByDoctorAndDate($doctorId, $date)
-    {
         return Appointment::where('doctor_id', $doctorId)
             ->whereDate('date', $date)
-            ->get();
+            ->where(function ($query) use ($appointmentTime) {
+                $query->whereBetween('time', [
+                    $appointmentTime->subHour()->format('H:i'),
+                    $appointmentTime->addHour()->format('H:i'),
+                ]);
+            })
+            ->exists();
     }
 
-    public function findByPatientAndReason($patientId, $reason)
+    public function hasMedicalProblemConflict(string $details, int $patientId): bool
     {
+        $oneMonthAgo = Carbon::now()->subMonth();
+
         return Appointment::where('patient_id', $patientId)
-            ->where('reason', $reason)
-            ->whereBetween('date', [now()->subMonths(2), now()])
+            ->where('details', $details)
+            ->where('date', '>=', $oneMonthAgo->format('Y-m-d'))
             ->exists();
     }
 }

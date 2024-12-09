@@ -2,55 +2,60 @@
 
 namespace App\Http\Controllers;
 
-use App\Services\PatientService;
-use App\Services\DoctorService;
-use App\Services\AppointmentService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Session;
+use App\Models\Appointment; 
 
 class DoctorController extends Controller
 {
-    protected $service;
-
-    public function __construct(DoctorService $service)
+    public function home()
     {
-        $this->service = $service;
-    }
 
-    public function index()
-    {
-        return response()->json($this->service->getAllDoctors());
-    }
+        $doctorId = session('user.id');
 
-    public function store(Request $request)
-    {
-        $data = $request->validate([
-            'name' => 'required|string',
-            'email' => 'required|email|unique:doctors',
-            'specialty' => 'required|string',
-            'start_time' => 'required|date_format:H:i',
-            'end_time' => 'required|date_format:H:i',
-            'phone_number' => 'nullable|string',
+        $userRole = session('user')['role'] ?? null;
+
+        if ($userRole !== 'doctor') {
+            return redirect('/')->withErrors(['error' => 'Unauthorized access']);
+        }
+
+        $response = Http::get('http://localhost:8080/api/appointments/doctor', [
+            'Authorization' => 'Bearer ' . session('token'),
         ]);
 
-        return response()->json($this->service->createDoctor($data), 201);
+        $appointments = Appointment::where('doctor_id', $doctorId)->get();
+
+        return view('doctor_home', [
+            'name' => session('user.name'),
+            'appointments' => $appointments,
+        ]);
     }
 
-    public function update(Request $request, $id)
+    public function updateAppointmentStatus(Request $request, $id)
     {
-        $data = $request->validate([
-            'email' => 'nullable|email|unique:doctors,email,' . $id,
-            'name' => 'nullable|string',
-            'specialty' => 'nullable|string',
-            'start_time' => 'nullable|date_format:H:i',
-            'end_time' => 'nullable|date_format:H:i',
-            'phone_number' => 'nullable|string',
+        $userRole = session('user')['role'] ?? null;
+
+        if ($userRole !== 'doctor') {
+            return redirect('/')->withErrors(['error' => 'Unauthorized access']);
+        }
+
+        $validated = $request->validate([
+            'status' => 'required|in:Pending,Completed,Cancelled',
         ]);
 
-        return response()->json($this->service->updateDoctor($id, $data));
-    }
+        $response = Http::patch("http://localhost:8080/api/appointments/{$id}/status", [
+            'status' => $validated['status'],
+        ], [
+            'Authorization' => 'Bearer ' . session('token'),
+        ]);
 
-    public function destroy($id)
-    {
-        return response()->json($this->service->deleteDoctor($id));
+        if ($response->successful()) {
+            return redirect()->route('doctor.home')->with('success', 'Appointment status updated successfully!');
+        }
+
+        return back()->withErrors(['error' => $response->body()]);
     }
-}
+} 
+
+

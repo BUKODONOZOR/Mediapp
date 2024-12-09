@@ -15,7 +15,7 @@ class CreateAppointmentsTable extends Migration
             $table->date('date');
             $table->time('time');
             $table->string('reason');
-            $table->string('status');
+            $table->string('status')->nullable()->change();
             $table->timestamps();
         });
     }

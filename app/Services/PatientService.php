@@ -3,9 +3,6 @@
 namespace App\Services;
 
 use App\Repositories\PatientRepository;
-use App\Repositories\DoctorRepository;
-use App\Repositories\AppointmentRepository;
-use Illuminate\Support\Facades\Log;
 
 class PatientService
 {
@@ -19,6 +16,11 @@ class PatientService
     public function getAllPatients()
     {
         return $this->repository->getAll();
+    }
+
+    public function findPatientByEmail(string $email)
+    {
+        return $this->repository->findByEmail($email);
     }
 
     public function createPatient(array $data)
@@ -36,5 +38,4 @@ class PatientService
         return $this->repository->delete($id);
     }
 }
-
-
+ 

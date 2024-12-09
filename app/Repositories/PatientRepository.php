@@ -3,9 +3,6 @@
 namespace App\Repositories;
 
 use App\Models\Patient;
-use App\Models\Doctor;
-use App\Models\Appointment;
-use Illuminate\Support\Facades\DB;
 
 class PatientRepository
 {
@@ -17,6 +14,11 @@ class PatientRepository
     public function findById($id)
     {
         return Patient::find($id);
+    }
+
+    public function findByEmail(string $email)
+    {
+        return Patient::where('email', $email)->first();
     }
 
     public function create(array $data)
