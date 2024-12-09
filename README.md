@@ -8,6 +8,9 @@
 </p>
 
 
+![image](https://github.com/user-attachments/assets/814ebe2f-acbd-4c3c-b3f0-341f2a84764a)
+
+
 Gestión de Citas Médicas (Laravel)
 Descripción del Proyecto
 Este módulo es parte de una solución integral para resolver problemas críticos en la gestión de citas médicas en una clínica. Utilizando Laravel como framework principal, hemos implementado una arquitectura MVC híbrida que centraliza y optimiza la lógica de negocio, facilitando la interacción entre pacientes, doctores y la administración de citas.
